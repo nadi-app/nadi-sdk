@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "nadi-sdk"
+version = "0.1.0"
+description = ""
+authors = ["gauthamchettiar <gauthamchettiar@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31.0"
+jsonschema = "^4.19.0"
+jsonpath-ng = "^1.5.3"
+click = "^8.1.7"
+
+[tool.poetry.group.test.dependencies]
+testfixtures = "^7.1.0"
+responses = "^0.23.3"
+pytest-cov = "^4.1.0"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
