@@ -1,9 +1,16 @@
 [tool.poetry]
 name = "nadi-sdk"
-version = "0.1.0"
-description = ""
+version = "0.0.1"
+description = "An SDK allowing you to fetch data from any source, inspired by Singer Spec."
 authors = ["gauthamchettiar <gauthamchettiar@gmail.com>"]
 readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/nadi-app/nadi-sdk"
+repository = "https://github.com/nadi-app/nadi-sdk"
+keywords = ["nadi", "data", "api"]
+include = [
+    "LICENSE",
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -16,8 +23,6 @@ click = "^8.1.7"
 testfixtures = "^7.1.0"
 responses = "^0.23.3"
 pytest-cov = "^4.1.0"
-
-
 
 [build-system]
 requires = ["poetry-core"]

@@ -45,15 +45,17 @@ class C:
 
 
 class CONFIGS:
-    nadi_prefix_arg = C("nadi.prefix.arg", "arg", str)
-    nadi_prefix_param = C("nadi.prefix.param", "param", str)
-    nadi_prefix_header = C("nadi.prefix.header", "header", str)
-    nadi_stream_parallelism = C("nadi.stream.parallelism", 5, int)
-    nadi_stream_file_write_frequency = C("nadi.stream.file.write_frequency", 10, int)
-    nadi_stream_request_limit = C("nadi.stream.request_limit", 999, int)
-    nadi_output_type = C("nadi.output_type", OUTPUT_TYPE.STDOUT, OUTPUT_TYPE)
+    nadi_prefix_arg = C("nadi_sdk.prefix.arg", "arg", str)
+    nadi_prefix_param = C("nadi_sdk.prefix.param", "param", str)
+    nadi_prefix_header = C("nadi_sdk.prefix.header", "header", str)
+    nadi_stream_parallelism = C("nadi_sdk.stream.parallelism", 5, int)
+    nadi_stream_file_write_frequency = C(
+        "nadi_sdk.stream.file.write_frequency", 10, int
+    )
+    nadi_stream_request_limit = C("nadi_sdk.stream.request_limit", 999, int)
+    nadi_output_type = C("nadi_sdk.output_type", OUTPUT_TYPE.STDOUT, OUTPUT_TYPE)
     nadi_output_format = C(
-        "nadi.output_format", OUTPUT_FORMAT.JSON_LINES, OUTPUT_FORMAT
+        "nadi_sdk.output_format", OUTPUT_FORMAT.JSON_LINES, OUTPUT_FORMAT
     )
 
     __config: dict[str, C] = {

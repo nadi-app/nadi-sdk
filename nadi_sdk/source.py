@@ -1,17 +1,17 @@
 from typing import Any, Generator
 from json import dumps
 
-from nadi.config import (
+from nadi_sdk.config import (
     CONFIGS,
     OUTPUT_FORMAT,
     OUTPUT_TYPE,
 )
-from nadi.input import (
+from nadi_sdk.input import (
     Config,
     Catalog,
     State,
 )
-from nadi.stream import RestStream, StreamCollection
+from nadi_sdk.stream import RestStream, StreamCollection
 
 
 class Options:

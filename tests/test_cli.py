@@ -1,6 +1,6 @@
 from unittest import TestCase
 from click.testing import CliRunner
-from nadi.cli import cli
+from nadi_sdk.cli import cli
 
 
 class TestCLI(TestCase):

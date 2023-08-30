@@ -1,10 +1,10 @@
 from typing import Any
-from nadi.config import (
+from nadi_sdk.config import (
     CONFIGS,
     OUTPUT_FORMAT,
     OUTPUT_TYPE,
 )
-from nadi.util import Util
+from nadi_sdk.util import Util
 from jsonschema import ValidationError
 
 import re

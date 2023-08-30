@@ -1,7 +1,7 @@
 from unittest import TestCase
 import responses
 from testfixtures import TempDirectory  # type: ignore
-from nadi.stream import (
+from nadi_sdk.stream import (
     RestStream,
     RestStreamResponseInvalidError,
     Stream,

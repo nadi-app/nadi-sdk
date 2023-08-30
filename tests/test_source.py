@@ -1,7 +1,7 @@
 from unittest import TestCase
-from nadi.config import CONFIGS, OUTPUT_TYPE
-from nadi.source import Source
-from nadi.stream import (
+from nadi_sdk.config import CONFIGS, OUTPUT_TYPE
+from nadi_sdk.source import Source
+from nadi_sdk.stream import (
     RestStream,
     Stream,
     StreamNotSupportedError,
@@ -76,7 +76,7 @@ class TestSource(TestCase):
                 },
             )
         )
-        src.options.config = {"nadi.arg.issue_id": "1"}
+        src.options.config = {"nadi_sdk.arg.issue_id": "1"}
         src.inject_arguments_from_config()
 
         self.assertEqual({"issue_id": "1"}, src.options.config.arguments)

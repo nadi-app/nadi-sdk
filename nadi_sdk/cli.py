@@ -1,7 +1,7 @@
 import click
 from typing import Any, Type
-from nadi.source import Source
-from nadi.config import CONFIGS
+from nadi_sdk.source import Source
+from nadi_sdk.config import CONFIGS
 
 
 def cls_fetch_defined_streams() -> Type[click.Option]:

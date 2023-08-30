@@ -6,7 +6,7 @@ from jsonschema import ValidationError, validate
 
 from requests import Response, get
 
-from nadi.util import Util
+from nadi_sdk.util import Util
 
 
 class StreamMissingRequiredArguments(Exception):
