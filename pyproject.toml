@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "nadi-sdk"
+name = "nadi"
 version = "0.0.1"
 description = "An SDK allowing you to fetch data from any source, inspired by Singer Spec."
 authors = ["gauthamchettiar <gauthamchettiar@gmail.com>"]
@@ -17,7 +17,7 @@ python = "^3.11"
 requests = "^2.31.0"
 jsonschema = "^4.19.0"
 jsonpath-ng = "^1.5.3"
-click = "^8.1.7"
+typer = "^0.9.0"
 
 [tool.poetry.group.test.dependencies]
 testfixtures = "^7.1.0"
@@ -27,3 +27,6 @@ pytest-cov = "^4.1.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+nadi-gh = "nadi.gh.gh:app"
