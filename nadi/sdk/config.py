@@ -52,8 +52,8 @@ class Conf:
 
     def validate(self, value: object) -> None:
         if self.is_required and value is None:
-            ConfigValueInvalidError(
-                self.key, "For required config value cannot be None"
+            raise ConfigValueInvalidError(
+                self.key, "Given Value is Required, it cannot be None."
             )
 
 
@@ -161,28 +161,33 @@ class Configs:
         raise ConfigNotSupportedError(key)
 
     @classmethod
-    def get(
-        cls, key: str, override_configs: dict[str, object] | None = None
-    ) -> "object|None":
+    def get(cls, key: str) -> "object|None":
+        def _get(conf: Conf, map: dict[str, object]):
+            _value = (
+                map.get(conf.argument_key) if conf.argument_key is not None else None
+            )
+            if _value is None:
+                _value = map.get(conf.key)
+            return _value
+
         conf = cls.get_supported_conf(key)
         value: "object | None" = None
-        if override_configs is not None and conf.argument_key is not None:
-            value = override_configs.get(conf.argument_key)
-        if value is None and override_configs is not None:
-            value = override_configs.get(conf.key)
+
+        if RuntimeArguments.state is not None:
+            value = _get(conf, RuntimeArguments.state.stream_config)
+        if value is None and RuntimeArguments.catalog is not None:
+            value = _get(conf, RuntimeArguments.catalog.stream_config)
         if value is None and RuntimeArguments.config is not None:
-            value = RuntimeArguments.config.get(key)
+            value = _get(conf, RuntimeArguments.config.json_data)
         if value is None:
-            value = environ.get(key)
+            value = _get(conf, dict(environ))
         if value is None:
             value = conf.default_value
         conf.validate(value)
         return value
 
     @classmethod
-    def get_or_error(
-        cls, key: str, override_configs: dict[str, object] | None = None
-    ) -> "object":
-        if (val := cls.get(key, override_configs)) is not None:
+    def get_or_error(cls, key: str) -> "object":
+        if (val := cls.get(key)) is not None:
             return val
         raise ConfigNotFoundError(key)

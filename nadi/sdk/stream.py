@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Generator
+from nadi.sdk.auth import Auth, RestAuth
 from nadi.sdk.config import Configs
 from nadi.sdk.util import Util
 from copy import deepcopy
@@ -57,13 +58,9 @@ class Stream:
             else output_json_schema
         )
 
-    def _replace_arguments_with_value(
-        self, fmt_string: str, override_configs: dict[str, object] | None = None
-    ) -> str:
+    def _replace_arguments_with_value(self, fmt_string: str) -> str:
         format_args = Util.extract_format_args_from_string(fmt_string)
-        format_dict = {
-            key: Configs.get_or_error(key, override_configs) for key in format_args
-        }
+        format_dict = {key: Configs.get_or_error(key) for key in format_args}
         return fmt_string.format(**format_dict)
 
     def validate_schema(self, json_data: "dict[str, object] | list[dict[str, object]]"):
@@ -83,7 +80,7 @@ class Stream:
 
     @abstractmethod
     def fetch(
-        self, override_configs: dict[str, object] | None = None
+        self, auth: Auth
     ) -> Generator[dict[str, object] | list[dict[str, object]], None, None]:
         raise NotImplementedError(
             "'fetch' method has to be implemented by child class."
@@ -101,25 +98,28 @@ class RestStream(Stream):
         super().__init__(name, description, output_json_schema)
         self.original_request = request
 
-    def prepare_requests(self, override_configs: "dict[str, object] | None") -> Request:
+    def prepare_requests(self, auth: RestAuth) -> Request:
         request = deepcopy(self.original_request)
-        request.url = self._replace_arguments_with_value(request.url, override_configs)
+        request.url = self._replace_arguments_with_value(request.url)
         for key in request.params:
             request.params[key] = self._replace_arguments_with_value(
-                request.params[key], override_configs
+                request.params[key]
             )
 
         for key in request.headers:
             request.headers[key] = self._replace_arguments_with_value(
-                request.headers[key], override_configs
+                request.headers[key]
             )
-
+        request = auth.prepare_request(request)
         return request
 
     def fetch(
-        self, override_configs: dict[str, object] | None = None
+        self, auth: Auth
     ) -> Generator[dict[str, object] | list[dict[str, object]], None, None]:
-        request = self.prepare_requests(override_configs=override_configs)
+        if not isinstance(auth, RestAuth):
+            raise TypeError("Provided 'auth' argument must be of type 'RestAuth'")
+
+        request = self.prepare_requests(auth)
         response = None
 
         session = Session()

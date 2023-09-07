@@ -1,3 +1,4 @@
+from nadi.sdk.auth import Auth, RestAuth
 from nadi.sdk.input import RuntimeArguments
 from nadi.sdk.stream import RestStream, Stream
 from nadi.sdk.config import Configs
@@ -16,8 +17,20 @@ class StateInputIsRequiredError(Exception):
 
 
 class StreamNotSupportedError(Exception):
-    def __init__(self, stream_name: str) -> None:
-        message = f"Stream '{stream_name}' is not supported."
+    def __init__(self, stream_name: str, supported_Streams: list[str]) -> None:
+        message = f"Stream '{stream_name}' is not supported. Supported streams are {supported_Streams}"
+        super().__init__(message)
+
+
+class AuthCannotBePerformed(Exception):
+    def __init__(self, auth_methods: list[str]) -> None:
+        message = f"Auth cannot be performed. All available auth methods {auth_methods} were unsuccessful."
+        super().__init__(message)
+
+
+class EnforcedAuthIsNotSupported(Exception):
+    def __init__(self, selected_auth: str) -> None:
+        message = f"Selected auth '{selected_auth}' is not available for source."
         super().__init__(message)
 
 
@@ -25,15 +38,32 @@ class Source:
     def __init__(self, name: str) -> None:
         self.name = name
         self.streams: list[Stream] = []
+        self.auths: list[Auth] = []
 
     def get_stream(self, stream_name: str) -> Stream:
         for stream in self.streams:
             if stream.name == stream_name:
                 return stream
-        raise StreamNotSupportedError(stream_name)
+        raise StreamNotSupportedError(
+            stream_name, [stream.name for stream in self.streams]
+        )
+
+    def get_auth(self) -> Auth:
+        if (
+            enforce_method := Configs.get_or_error("nadi.auth.enforce_method")
+        ) != "NONE":
+            for auth in self.auths:
+                if enforce_method == auth.name:
+                    return auth
+            raise EnforcedAuthIsNotSupported(str(enforce_method))
+
+        for auth in self.auths:
+            if isinstance(auth, RestAuth) and auth.can_prepare_request():
+                return auth
+        raise AuthCannotBePerformed([auth.name for auth in self.auths])
 
     def _write(self, output: dict[str, object] | list[dict[str, object]]):
-        if Configs.get_or_error("nadi.output.to") == "stdout":
+        if Configs.get("nadi.output.to") == "stdout":
             if isinstance(output, dict):
                 print(output)
             else:
@@ -45,22 +75,24 @@ class Source:
             raise CatalogInputIsRequiredError()
 
         for catalog in RuntimeArguments.catalog.json_lines_data:
-            catalog_configs = catalog.configs if catalog.configs is not None else {}
-            self.fetch_stream(
-                catalog.name, override_configs=catalog_configs, dry_run=dry_run
+            RuntimeArguments.catalog.set_stream_config(
+                catalog.configs if catalog.configs is not None else {}
             )
+            self.fetch_stream(catalog.name, dry_run=dry_run)
+            RuntimeArguments.catalog.reset_stream_config()
 
     def fetch_stream(
         self,
         stream_name: str,
-        override_configs: "dict[str, object] | None" = None,
         dry_run: bool = False,
     ):
         stream = self.get_stream(stream_name)
+        auth = self.get_auth()
+
         if dry_run:
-            if isinstance(stream, RestStream):
-                stream.prepare_requests(override_configs=override_configs)
+            if isinstance(stream, RestStream) and isinstance(auth, RestAuth):
+                stream.prepare_requests(auth=auth)
             return
 
-        for data in stream.fetch(override_configs=override_configs):
+        for data in stream.fetch(auth):
             self._write(data)
