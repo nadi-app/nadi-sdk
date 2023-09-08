@@ -11,7 +11,7 @@ A python SDK to build CLI tools to fetch data from anywhere. Not fully conforman
 
 ## Roadmap
 [ ] Add detailed logging support [#1](https://github.com/nadi-app/nadi-sdk/issues/1)  
-[ ] Add support for saving to file as jsonlines
-[ ] Add support for OAuth authentication 
-[ ] Add support for directly pushing data to cloud storage (S3)  
-[ ] Add support for fetching data from database  
+[ ] Add support for saving to file as jsonlines  
+[ ] Add support for OAuth authentication  
+[ ] Add support for directly pushing data to cloud storage (S3)   
+[ ] Add support for fetching data from database   
