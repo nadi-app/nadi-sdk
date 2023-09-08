@@ -1,7 +1,7 @@
 from nadi.sdk.auth import Auth, RestAuth
 from nadi.sdk.input import RuntimeArguments
 from nadi.sdk.stream import RestStream, Stream
-from nadi.sdk.config import Configs
+from nadi.sdk.config import Conf, Configs
 
 
 class CatalogInputIsRequiredError(Exception):
@@ -37,30 +37,40 @@ class EnforcedAuthIsNotSupported(Exception):
 class Source:
     def __init__(self, name: str) -> None:
         self.name = name
-        self.streams: list[Stream] = []
-        self.auths: list[Auth] = []
+        self.supported_streams: list[Stream] = []
+        self.supported_auths: list[Auth] = []
+
+    @property
+    def supported_configs(self) -> list[Conf]:
+        return self.__supported_configs
+
+    @supported_configs.setter
+    def supported_configs(self, configs: list[Conf]):
+        for conf in configs:
+            Configs.add_supported_config(conf)
+        self.__supported_configs = configs
 
     def get_stream(self, stream_name: str) -> Stream:
-        for stream in self.streams:
+        for stream in self.supported_streams:
             if stream.name == stream_name:
                 return stream
         raise StreamNotSupportedError(
-            stream_name, [stream.name for stream in self.streams]
+            stream_name, [stream.name for stream in self.supported_streams]
         )
 
     def get_auth(self) -> Auth:
         if (
             enforce_method := Configs.get_or_error("nadi.auth.enforce_method")
         ) != "NONE":
-            for auth in self.auths:
+            for auth in self.supported_auths:
                 if enforce_method == auth.name:
                     return auth
             raise EnforcedAuthIsNotSupported(str(enforce_method))
 
-        for auth in self.auths:
+        for auth in self.supported_auths:
             if isinstance(auth, RestAuth) and auth.can_prepare_request():
                 return auth
-        raise AuthCannotBePerformed([auth.name for auth in self.auths])
+        raise AuthCannotBePerformed([auth.name for auth in self.supported_auths])
 
     def _write(self, output: dict[str, object] | list[dict[str, object]]):
         if Configs.get("nadi.output.to") == "stdout":

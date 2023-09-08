@@ -1,6 +1,12 @@
+import contextlib
 from abc import abstractmethod
 from requests import Request
-from nadi.sdk.config import ConfigNotFoundError, Configs, StringConf
+from nadi.sdk.config import (
+    ConfigIsAlreadySupported,
+    ConfigNotFoundError,
+    Configs,
+    StringConf,
+)
 
 
 class Auth:
@@ -10,16 +16,16 @@ class Auth:
 
 class RestAuth(Auth):
     def __init__(self, name: str) -> None:
-        Configs.supported_configs.extend(
-            [
+        with contextlib.suppress(ConfigIsAlreadySupported):
+            Configs.add_supported_config(
                 StringConf(
                     "nadi.auth.enforce_method",
                     "NONE",
                     is_required=False,
+                    is_secret=False,
                     valid_values=["NONE", "BASIC", "BEARER", "NO_AUTH"],
                 )
-            ]
-        )
+            )
         super().__init__(name)
 
     @abstractmethod
@@ -44,11 +50,11 @@ class NoRestAuth(RestAuth):
 
 class BasicAuth(RestAuth):
     def __init__(self) -> None:
-        Configs.supported_configs.extend(
-            [
-                StringConf("nadi.auth.basic.username", None, is_required=False),
-                StringConf("nadi.auth.basic.password", None, is_required=False),
-            ]
+        Configs.add_supported_config(
+            StringConf("nadi.auth.basic.username", None, is_required=False)
+        )
+        Configs.add_supported_config(
+            StringConf("nadi.auth.basic.password", None, is_required=False),
         )
         super().__init__("BASIC")
 
@@ -62,11 +68,10 @@ class BasicAuth(RestAuth):
 
 class BearerAuth(RestAuth):
     def __init__(self) -> None:
-        Configs.supported_configs.extend(
-            [
-                StringConf("nadi.auth.bearer.token", None, is_required=False),
-            ]
+        Configs.add_supported_config(
+            StringConf("nadi.auth.bearer.token", None, is_required=False)
         )
+
         super().__init__("BEARER")
 
     def prepare_request(self, request: Request) -> Request:

@@ -1,3 +1,4 @@
+import contextlib
 from os import environ
 
 from nadi.sdk.input import RuntimeArguments
@@ -25,6 +26,13 @@ class ConfigValueInvalidError(Exception):
     def __init__(self, key: str, extended_message: str) -> None:
         message = f"Provided value for config '{key}' is invalid. {extended_message}"
         super().__init__(message)
+
+
+class ConfigIsAlreadySupported(Exception):
+    def __init__(self, key: str, argument_key: str | None) -> None:
+        super().__init__(
+            f"Config with key '{key}' or argument_key {argument_key} is already present."
+        )
 
 
 class Conf:
@@ -56,6 +64,20 @@ class Conf:
                 self.key, "Given Value is Required, it cannot be None."
             )
 
+    def to_dict(self) -> dict[str, object | None]:
+        value = None
+        with contextlib.suppress(ConfigValueInvalidError):
+            value = Configs.get(self.key)
+        value = "___REDACTED___" if self.is_secret and value is not None else value
+        return {
+            "key": self.key,
+            "value": value,
+            "argument_key": self.argument_key,
+            "default_value": self.default_value,
+            "is_secret": self.is_secret,
+            "is_required": self.is_required,
+        }
+
 
 class StringConf(Conf):
     def __init__(
@@ -77,6 +99,9 @@ class StringConf(Conf):
             raise ConfigValueInvalidError(
                 self.key, f"Provided value {value} is not one of {self.valid_values}."
             )
+
+    def to_dict(self) -> dict[str, object]:
+        return dict(super().to_dict(), **{"valid_values": self.valid_values})
 
 
 class IntConf(Conf):
@@ -150,6 +175,17 @@ class Configs:
             is_secret=False,
         ),
     ]
+
+    @classmethod
+    def add_supported_config(cls, in_conf: Conf):
+        for conf in cls.supported_configs:
+            if conf.key == in_conf.key or (
+                conf.argument_key is not None
+                and in_conf.argument_key is not None
+                and conf.argument_key == in_conf.argument_key
+            ):
+                raise ConfigIsAlreadySupported(in_conf.key, in_conf.argument_key)
+        cls.supported_configs.append(in_conf)
 
     @classmethod
     def get_supported_conf(cls, key: str) -> Conf:

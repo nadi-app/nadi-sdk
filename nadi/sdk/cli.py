@@ -1,16 +1,18 @@
 from typing import Annotated
 from typer import Typer, Option
+from nadi.sdk.config import Configs
 from nadi.sdk.input import RuntimeArguments
 from nadi.sdk.source import Source
 
 
 class CLI:
     app = Typer()
-    fetch_app = Typer()
-    discover_app = Typer()
 
+    fetch_app = Typer()
     app.add_typer(fetch_app, name="fetch")
-    app.add_typer(discover_app, name="discover")
+
+    list_app = Typer()
+    app.add_typer(list_app, name="list")
 
     source: Source | None = None
 
@@ -51,3 +53,19 @@ class CLI:
         RuntimeArguments.setup(config=config, catalog=catalog)
         if isinstance(CLI.source, Source):
             CLI.source.fetch_stream(stream_name=stream, dry_run=dry_run)
+
+    @list_app.command("config")
+    @staticmethod
+    def list_config(
+        config: Annotated[str, Option(help="Config to be used.")] = "",
+        missing: Annotated[bool, Option(help="Show only missing configs.")] = False,
+    ):
+        RuntimeArguments.setup(config=config)
+        if isinstance(CLI.source, Source):
+            for conf in Configs.supported_configs:
+                conf_dict = conf.to_dict()
+                if missing:
+                    if conf.is_required and conf_dict["value"] is None:
+                        print(conf_dict)
+                else:
+                    print(conf_dict)
