@@ -51,7 +51,7 @@ class TestConfigs(TestCase):
         )
 
     def tearDown(self) -> None:
-        Configs.supported_configs = Configs.supported_configs[:-2]
+        Configs.supported_configs = Configs.supported_configs[:-3]
 
     def test_get_supported_conf(self):
         self.assertEqual("nadi.abc", Configs.get_supported_conf("nadi.abc").key)
@@ -103,3 +103,57 @@ class TestConfigs(TestCase):
 
         self.assertEqual("xyz", Configs.get_or_error("abc"))
         self.assertRaises(ConfigNotFoundError, Configs.get_or_error, "ghi")
+
+    def test_to_dict(self):
+        s1_conf = StringConf("nadi.abc", "xyz", "abc")
+        self.assertEqual(
+            {
+                "key": "nadi.abc",
+                "argument_key": "abc",
+                "default_value": "xyz",
+                "is_required": True,
+                "is_secret": True,
+                "valid_values": None,
+                "value": "___REDACTED___",
+            },
+            s1_conf.to_dict(),
+        )
+
+        s2_conf = StringConf(
+            "nadi.abc", "xyz", "abc", is_secret=False, valid_values=["xyz", "rst"]
+        )
+        self.assertEqual(
+            {
+                "key": "nadi.abc",
+                "argument_key": "abc",
+                "default_value": "xyz",
+                "is_required": True,
+                "is_secret": False,
+                "valid_values": ["xyz", "rst"],
+                "value": "xyz",
+            },
+            s2_conf.to_dict(),
+        )
+
+    def test_supported_config(self):
+        self.assertEqual(6, len(Configs.supported_configs))
+        self.assertEqual(
+            None,
+            Configs.add_supported_config(
+                StringConf("nadi.lmno", None, "lmno", is_required=False)
+            ),
+        )
+        self.assertEqual(None, Configs.get("nadi.lmno"))
+        self.assertEqual(7, len(Configs.supported_configs))
+        self.assertRaises(
+            ConfigIsAlreadySupported,
+            Configs.add_supported_config,
+            StringConf("nadi.abc", None, "lmno", is_required=False),
+        )
+        self.assertEqual(7, len(Configs.supported_configs))
+        self.assertRaises(
+            ConfigIsAlreadySupported,
+            Configs.add_supported_config,
+            StringConf("nadi.lmno", None, "abc", is_required=False),
+        )
+        self.assertEqual(7, len(Configs.supported_configs))

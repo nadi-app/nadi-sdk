@@ -189,7 +189,7 @@ class Configs:
 
     @classmethod
     def get_supported_conf(cls, key: str) -> Conf:
-        for conf in Configs.supported_configs:
+        for conf in cls.supported_configs:
             if conf.key == key or (
                 conf.argument_key is not None and conf.argument_key == key
             ):
