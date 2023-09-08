@@ -80,7 +80,7 @@ class Stream:
 
     @abstractmethod
     def fetch(
-        self, auth: Auth
+        self, auth: Auth, limit: int | None = None
     ) -> Generator[dict[str, object] | list[dict[str, object]], None, None]:
         raise NotImplementedError(
             "'fetch' method has to be implemented by child class."
@@ -117,16 +117,19 @@ class RestStream(Stream):
         return request
 
     def fetch(
-        self, auth: Auth
+        self, auth: Auth, limit: int | None = None
     ) -> Generator[dict[str, object] | list[dict[str, object]], None, None]:
         if not isinstance(auth, RestAuth):
             raise TypeError("Provided 'auth' argument must be of type 'RestAuth'")
 
         request = self.prepare_requests(auth)
         response = None
+        run_count: int = 0
 
         session = Session()
         while (request := self.fetch_next_request(request, response)) is not None:
+            if limit is not None and run_count >= limit:
+                return
             prepared_request = request.prepare()
             try:
                 with session.send(prepared_request, stream=False) as response:
@@ -134,6 +137,7 @@ class RestStream(Stream):
                         raise StreamResponseStatusInvalid(self.name, response)
                     json_response = response.json()
                     self.validate_schema(json_response)
+                run_count += 1
                 yield json_response
             except ChunkedEncodingError as err:
                 raise StreamResponseContentInvalid(self.name) from err

@@ -30,12 +30,17 @@ class CLI:
             help="get stream details from this file", rich_help_panel="Common Inputs"
         ),
     ]
+    ann_limit = Annotated[int, Option(help="limit number of records fetched")]
     ann_dry_run = Annotated[
         bool,
-        Option(help="validate without actually executing", is_flag=True),
+        Option(help="validate without actually executing", rich_help_panel="Flags"),
     ]
-    ann_missing = Annotated[bool, Option(help="list only missing configs")]
-    ann_simple = Annotated[bool, Option(help="list only basic details")]
+    ann_missing = Annotated[
+        bool, Option(help="list only missing configs", rich_help_panel="Flags")
+    ]
+    ann_simple = Annotated[
+        bool, Option(help="list only basic details", rich_help_panel="Flags")
+    ]
     ann_stream_name = Annotated[
         str, Argument(help="stream name that needs to be fetched")
     ]
@@ -50,28 +55,33 @@ class CLI:
     def fetch_all(
         config: ann_config = "",
         catalog: ann_catalog = "",
+        limit: ann_limit = -1,
         dry_run: ann_dry_run = False,
     ):
         """
         Fetch all streams defined in --catalog file.
         """
         RuntimeArguments.setup(config=config, catalog=catalog)
+        limit_by = None if limit == -1 else limit
+
         if isinstance(CLI.source, Source):
-            CLI.source.fetch_all(dry_run=dry_run)
+            CLI.source.fetch_all(limit=limit_by, dry_run=dry_run)
 
     @fetch_app.command("stream")
     @staticmethod
     def fetch_stream(
         stream: str,
         config: ann_config = "",
+        limit: ann_limit = -1,
         dry_run: ann_dry_run = False,
     ):
         """
         Fetch stream STREAM from supported streams for application.
         """
         RuntimeArguments.setup(config=config)
+        limit_by = None if limit == -1 else limit
         if isinstance(CLI.source, Source):
-            CLI.source.fetch_stream(stream_name=stream, dry_run=dry_run)
+            CLI.source.fetch_stream(stream_name=stream, limit=limit_by, dry_run=dry_run)
 
     @list_app.command("config")
     @staticmethod

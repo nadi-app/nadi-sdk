@@ -80,7 +80,7 @@ class Source:
                 for line in output:
                     print(line)
 
-    def fetch_all(self, dry_run: bool = False):
+    def fetch_all(self, limit: int | None = None, dry_run: bool = False):
         if RuntimeArguments.catalog is None:
             raise CatalogInputIsRequiredError()
 
@@ -88,12 +88,13 @@ class Source:
             RuntimeArguments.catalog.set_stream_config(
                 catalog.configs if catalog.configs is not None else {}
             )
-            self.fetch_stream(catalog.name, dry_run=dry_run)
+            self.fetch_stream(catalog.name, limit=limit, dry_run=dry_run)
             RuntimeArguments.catalog.reset_stream_config()
 
     def fetch_stream(
         self,
         stream_name: str,
+        limit: int | None = None,
         dry_run: bool = False,
     ):
         stream = self.get_stream(stream_name)
@@ -104,5 +105,5 @@ class Source:
                 stream.prepare_requests(auth=auth)
             return
 
-        for data in stream.fetch(auth):
+        for data in stream.fetch(auth, limit):
             self._write(data)

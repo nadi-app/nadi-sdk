@@ -161,7 +161,7 @@ class Configs:
             "nadi.output.format",
             "jsonlines",
             is_secret=False,
-            valid_values=["json", "jsonlines"],
+            valid_values=["jsonlines"],
         ),
         StringConf(
             "nadi.output.to",
