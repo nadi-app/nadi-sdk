@@ -86,6 +86,9 @@ class Stream:
             "'fetch' method has to be implemented by child class."
         )
 
+    def to_dict(self) -> dict[str, object]:
+        return {"name": self.name, "description": self.description}
+
 
 class RestStream(Stream):
     def __init__(
@@ -143,4 +146,10 @@ class RestStream(Stream):
     ) -> "Request| None":
         raise NotImplementedError(
             "'fetch_next_request' method has to be implemented by child class."
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return dict(
+            super().to_dict(),
+            **self.original_request.__dict__,
         )
