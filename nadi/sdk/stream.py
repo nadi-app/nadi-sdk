@@ -49,6 +49,8 @@ class Stream:
         name: str,
         description: str,
         output_json_schema: "str | dict[str, object] | None" = None,
+        group: str | None = None,
+        tags: list[str] | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -57,6 +59,8 @@ class Stream:
             if isinstance(output_json_schema, str)
             else output_json_schema
         )
+        self.tags = tags if tags is not None else []
+        self.group = group
 
     def _replace_arguments_with_value(self, fmt_string: str) -> str:
         format_args = Util.extract_format_args_from_string(fmt_string)
@@ -97,8 +101,10 @@ class RestStream(Stream):
         description: str,
         request: Request,
         output_json_schema: "str | dict[str, object] | None" = None,
+        group: str | None = None,
+        tags: list[str] | None = None,
     ) -> None:
-        super().__init__(name, description, output_json_schema)
+        super().__init__(name, description, output_json_schema, group, tags)
         self.original_request = request
 
     def prepare_requests(self, auth: RestAuth) -> Request:
